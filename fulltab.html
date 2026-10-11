@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LESCO Bill Calculator — Studio Workspace</title>
+  <link rel="stylesheet" href="fulltab.css">
+</head>
+<body>
+  <div class="studio-app">
+    <!-- Studio Header -->
+    <header class="studio-header">
+      <div class="header-container">
+        <div class="header-brand">
+          <div class="header-logo" aria-hidden="true">⚡</div>
+          <div class="header-titles">
+            <h1>LESCO Bill Calculator <span class="badge-studio">Studio Workspace</span></h1>
+            <p>Lahore Electric Supply Company — Official NEPRA Slabs, Taxes &amp; Tariffs</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="hdr-btn" id="btn-export-csv" title="Export calculation history as CSV">
+            <span aria-hidden="true">📊</span> Export CSV
+          </button>
+          <button type="button" class="hdr-btn" id="btn-export-json" title="Export calculation data as JSON">
+            <span aria-hidden="true">💾</span> Export JSON
+          </button>
+          <button type="button" class="hdr-btn primary" id="btn-studio-print" title="Print official bill estimate">
+            <span aria-hidden="true">🖨️</span> Print Bill
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="studio-main">
+      <div class="workspace-grid">
+
+        <!-- LEFT DECK: Calculation Console -->
+        <section class="console-deck" aria-label="Tariff & Input Console">
+          <!-- Tariff Category Selector -->
+          <div class="deck-card">
+            <div class="deck-header">
+              <h2>1. Select Tariff Category</h2>
+            </div>
+            <div class="tariff-nav" role="tablist">
+              <button type="button" role="tab" class="tariff-tab-btn active" id="stab-btn-domestic" data-tariff="domestic" aria-selected="true">
+                <span class="tab-ico" aria-hidden="true">🏠</span>
+                <span class="tab-txt">Domestic (A-1)</span>
+              </button>
+              <button type="button" role="tab" class="tariff-tab-btn" id="stab-btn-commercial" data-tariff="commercial" aria-selected="false">
+                <span class="tab-ico" aria-hidden="true">🏢</span>
+                <span class="tab-txt">Commercial (A-2)</span>
+              </button>
+              <button type="button" role="tab" class="tariff-tab-btn" id="stab-btn-agricultural" data-tariff="agricultural" aria-selected="false">
+                <span class="tab-ico" aria-hidden="true">🌾</span>
+                <span class="tab-txt">Agricultural (D)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Meter Reading Helper Tool -->
+          <div class="deck-card">
+            <details class="meter-helper-details" id="meter-helper-accordion">
+              <summary class="meter-helper-summary">
+                <span>📟 Meter Reading Difference Calculator</span>
+                <span class="helper-arrow" aria-hidden="true">▼</span>
+              </summary>
+              <div class="meter-helper-body">
+                <div class="grid-2col">
+                  <div class="form-group">
+                    <label for="meter-prev">Previous Reading (kWh)</label>
+                    <input type="number" id="meter-prev" placeholder="e.g. 14200" min="0">
+                  </div>
+                  <div class="form-group">
+                    <label for="meter-curr">Current Reading (kWh)</label>
+                    <input type="number" id="meter-curr" placeholder="e.g. 14450" min="0">
+                  </div>
+                </div>
+                <button type="button" class="btn-subtle" id="btn-apply-meter-diff">
+                  Apply Computed Units (<span id="meter-diff-val">0</span> kWh)
+                </button>
+              </div>
+            </details>
+          </div>
+
+          <!-- Parameter Inputs -->
+          <div class="deck-card">
+            <div class="deck-header">
+              <h2>2. Consumption &amp; Connection Details</h2>
+            </div>
+
+            <!-- Presets Bar -->
+            <div class="presets-section" id="studio-presets-section">
+              <span class="presets-title">Quick Household Presets:</span>
+              <div class="presets-chips">
+                <button type="button" class="preset-chip" data-units="50">50u (Lifeline)</button>
+                <button type="button" class="preset-chip" data-units="100">100u (Max Lifeline)</button>
+                <button type="button" class="preset-chip" data-units="180">180u (Protected)</button>
+                <button type="button" class="preset-chip" data-units="300">300u (Standard)</button>
+                <button type="button" class="preset-chip" data-units="450">450u (Summer AC)</button>
+                <button type="button" class="preset-chip" data-units="750">750u (Above 700 Flat)</button>
+              </div>
+            </div>
+
+            <div class="form-fields-container">
+              <!-- Non-agricultural units -->
+              <div class="form-group" id="sfield-units-container">
+                <label for="sinput-units">Units Consumed (kWh)</label>
+                <div class="input-wrap">
+                  <input type="number" id="sinput-units" placeholder="e.g. 250" min="0" max="99999">
+                  <span class="unit-badge">kWh</span>
+                </div>
+              </div>
+
+              <!-- Agricultural Peak & Off-Peak -->
+              <div class="grid-2col hidden" id="sfield-agri-container">
+                <div class="form-group">
+                  <label for="sinput-agri-peak">Peak Hours (kWh)</label>
+                  <div class="input-wrap">
+                    <input type="number" id="sinput-agri-peak" placeholder="e.g. 150" min="0" max="99999">
+                    <span class="unit-badge peak">Peak</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="sinput-agri-offpeak">Off-Peak Hours (kWh)</label>
+                  <div class="input-wrap">
+                    <input type="number" id="sinput-agri-offpeak" placeholder="e.g. 350" min="0" max="99999">
+                    <span class="unit-badge offpeak">Off-Peak</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phase & Category Row -->
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label for="sselect-phase">Connection Phase</label>
+                  <select id="sselect-phase">
+                    <option value="single">Single Phase (1-Phase)</option>
+                    <option value="three">Three Phase (3-Phase)</option>
+                  </select>
+                </div>
+
+                <!-- Domestic Category -->
+                <div class="form-group" id="sfield-dom-cat-container">
+                  <label for="sselect-dom-cat">Domestic Category</label>
+                  <select id="sselect-dom-cat">
+                    <option value="protected">Protected / Lifeline (Subsidized)</option>
+                    <option value="unprotected">Unprotected Consumer (Standard)</option>
+                  </select>
+                </div>
+
+                <!-- Commercial Load -->
+                <div class="form-group hidden" id="sfield-com-load-container">
+                  <label for="sselect-com-load">Sanctioned Load (kW)</label>
+                  <select id="sselect-com-load">
+                    <option value="under5">Less than 5 kW</option>
+                    <option value="above5">5 kW or Above</option>
+                  </select>
+                </div>
+
+                <!-- Agricultural Load -->
+                <div class="form-group hidden" id="sfield-agri-load-container">
+                  <label for="sselect-agri-load">Sanctioned Load</label>
+                  <select id="sselect-agri-load">
+                    <option value="under5">Less than 5 kW</option>
+                    <option value="above5">More than 5 kW</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Eligibility Note Banner -->
+              <div class="studio-note-banner hidden" id="snote-banner" role="status">
+                <span class="snote-icon" id="snote-icon">💡</span>
+                <span class="snote-text" id="snote-text"></span>
+              </div>
+
+              <!-- FPA Input -->
+              <div class="fpa-box">
+                <div class="fpa-info">
+                  <label for="sinput-fpa">Fuel Price Adjustment (FPA)</label>
+                  <small>NEPRA monthly fuel cost adjustment (Rs/unit). Can be positive or negative.</small>
+                </div>
+                <div class="fpa-input-wrap">
+                  <input type="number" id="sinput-fpa" value="0.00" step="0.01" placeholder="0.00">
+                  <span class="fpa-unit">Rs/u</span>
+                </div>
+              </div>
+
+              <!-- Primary Calculate Button -->
+              <div class="action-buttons-row">
+                <button type="button" class="btn-primary-calc" id="sbtn-calculate">
+                  <span aria-hidden="true">⚡</span> Calculate LESCO Bill
+                </button>
+                <button type="button" class="btn-secondary-reset" id="sbtn-reset" title="Reset all inputs">
+                  <span aria-hidden="true">🔄</span> Reset
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparison Tool Card -->
+          <div class="deck-card">
+            <div class="deck-header">
+              <h2>⚖️ Scenario Comparison Tool</h2>
+            </div>
+            <div class="comparison-tool">
+              <p class="comparison-desc">Instantly compare your current consumption against alternative categories or connection phases.</p>
+              <div class="comparison-actions">
+                <button type="button" class="btn-compare" id="btn-cmp-protected">
+                  Protected vs Unprotected
+                </button>
+                <button type="button" class="btn-compare" id="btn-cmp-phase">
+                  Single vs Three Phase
+                </button>
+              </div>
+              <div class="comparison-result-card hidden" id="cmp-result-card">
+                <div class="cmp-title" id="cmp-title">Comparison Results</div>
+                <div class="cmp-grid">
+                  <div class="cmp-col">
+                    <span class="cmp-lbl" id="cmp-lbl-a">Option A</span>
+                    <strong class="cmp-val" id="cmp-val-a">Rs 0</strong>
+                  </div>
+                  <div class="cmp-col">
+                    <span class="cmp-lbl" id="cmp-lbl-b">Option B</span>
+                    <strong class="cmp-val" id="cmp-val-b">Rs 0</strong>
+                  </div>
+                  <div class="cmp-diff-col">
+                    <span class="cmp-lbl">Difference</span>
+                    <strong class="cmp-diff-val" id="cmp-diff-val">Rs 0</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- RIGHT DECK: Bill Ledger, Analytics & History -->
+        <section class="results-deck" aria-label="Results & Bill Ledger">
+
+          <!-- Hero Total Card -->
+          <div class="hero-total-card">
+            <div class="hero-total-top">
+              <div class="hero-left">
+                <span class="hero-subtitle">Estimated Total Bill (Within Due Date)</span>
+                <div class="hero-amount-wrap">
+                  <span class="hero-curr">Rs</span>
+                  <span class="hero-amount" id="sres-total-amount">0</span>
+                </div>
+              </div>
+              <div class="hero-right">
+                <div class="hero-badge" id="sres-category-badge">Domestic (Protected)</div>
+                <div class="hero-stat">Consumption: <strong id="sres-stat-units">0</strong> kWh</div>
+                <div class="hero-stat">Average Cost: <strong id="sres-stat-avg">0.00</strong> Rs/kWh</div>
+              </div>
+            </div>
+
+            <!-- Due Dates Grid in Hero -->
+            <div class="hero-due-row">
+              <div class="due-box on-time">
+                <span class="due-tag">Within Due Date</span>
+                <strong class="due-dt" id="sres-due-date">–</strong>
+                <span class="due-val" id="sres-due-val">Rs 0</span>
+              </div>
+              <div class="due-box late">
+                <span class="due-tag">After Due Date (+10% Surcharge)</span>
+                <strong class="due-dt" id="sres-late-date">–</strong>
+                <span class="due-val" id="sres-late-val">Rs 0</span>
+              </div>
+            </div>
+
+            <div class="hero-actions-bar">
+              <button type="button" class="hero-btn" id="sbtn-copy-summary">
+                <span aria-hidden="true">📋</span> Copy Bill Summary
+              </button>
+              <button type="button" class="hero-btn" id="sbtn-add-history">
+                <span aria-hidden="true">📌</span> Save to History
+              </button>
+            </div>
+          </div>
+
+          <!-- Cost Breakdown Chart / Progress Bar -->
+          <div class="deck-card">
+            <div class="deck-header">
+              <h2>📊 Cost Composition Analysis</h2>
+            </div>
+            <div class="cost-bar-container">
+              <div class="cost-stacked-bar" id="cost-stacked-bar">
+                <div class="cost-segment energy" id="seg-energy" style="width: 50%" title="Energy Charges"></div>
+                <div class="cost-segment taxes" id="seg-taxes" style="width: 25%" title="Taxes (GST & ED)"></div>
+                <div class="cost-segment surcharges" id="seg-surcharges" style="width: 20%" title="Surcharges (FC, NJ, FPA)"></div>
+                <div class="cost-segment fixed" id="seg-fixed" style="width: 5%" title="Fixed & Meter"></div>
+              </div>
+              <div class="cost-legend">
+                <span class="legend-item"><span class="dot energy"></span> Energy Charges (<span id="pct-energy">0</span>%)</span>
+                <span class="legend-item"><span class="dot taxes"></span> Taxes: GST &amp; ED (<span id="pct-taxes">0</span>%)</span>
+                <span class="legend-item"><span class="dot surcharges"></span> Surcharges: FC &amp; NJ (<span id="pct-surcharges">0</span>%)</span>
+                <span class="legend-item"><span class="dot fixed"></span> Fixed / Meter (<span id="pct-fixed">0</span>%)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slab-wise Breakdown Table -->
+          <div class="deck-card" id="sslab-card">
+            <div class="deck-header">
+              <h2>🔢 Progressive Slab Breakdown</h2>
+            </div>
+            <div class="table-wrap">
+              <table class="studio-table">
+                <thead>
+                  <tr>
+                    <th>Slab Tier</th>
+                    <th class="text-right">Units Consumed</th>
+                    <th class="text-right">Unit Rate (Rs)</th>
+                    <th class="text-right">Energy Cost (Rs)</th>
+                  </tr>
+                </thead>
+                <tbody id="sslab-table-body">
+                  <tr><td colspan="4" class="text-center">Enter consumption units and calculate to view slab breakdown.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Itemized Tax & Surcharge Ledger -->
+          <div class="deck-card">
+            <div class="deck-header">
+              <h2>📋 Complete Itemized Bill Ledger</h2>
+            </div>
+            <div class="ledger-container" id="sledger-container">
+              <div class="ledger-empty">Calculate bill to view itemized breakdown.</div>
+            </div>
+          </div>
+
+          <!-- Calculation History Ledger -->
+          <div class="deck-card">
+            <div class="deck-header-with-action">
+              <h2>📑 Calculation History Log</h2>
+              <div class="deck-actions">
+                <button type="button" class="btn-table-action" id="btn-clear-history-log">Clear History</button>
+              </div>
+            </div>
+            <div class="history-list-wrap">
+              <div class="history-list" id="history-items-container">
+                <div class="history-empty">No calculations saved yet. Calculations will appear here as you save them.</div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <!-- Statutory Reference & Tariff Schedules -->
+      <section class="studio-reference-section" aria-label="Official Tariff Schedules">
+        <div class="deck-card">
+          <div class="deck-header">
+            <h2>📚 Official NEPRA Approved LESCO Tariff Schedules</h2>
+          </div>
+          <div class="ref-grid-3col">
+            <!-- Domestic Table -->
+            <div class="ref-block">
+              <h3>Domestic Tariffs (A-1)</h3>
+              <table class="ref-schedule-table">
+                <thead><tr><th>Slab Range</th><th class="text-right">Rate (Rs)</th></tr></thead>
+                <tbody>
+                  <tr><td>1–50 (Lifeline)</td><td class="text-right">Rs 3.95</td></tr>
+                  <tr><td>51–100 (Lifeline)</td><td class="text-right">Rs 7.74</td></tr>
+                  <tr><td>1–100 (Protected)</td><td class="text-right">Rs 10.54</td></tr>
+                  <tr><td>101–200 (Protected)</td><td class="text-right">Rs 13.01</td></tr>
+                  <tr><td>1–100 (Unprotected)</td><td class="text-right">Rs 22.44</td></tr>
+                  <tr><td>101–200 (Unprotected)</td><td class="text-right">Rs 28.91</td></tr>
+                  <tr><td>201–300</td><td class="text-right">Rs 33.10</td></tr>
+                  <tr><td>301–400</td><td class="text-right">Rs 37.99</td></tr>
+                  <tr><td>401–500</td><td class="text-right">Rs 40.20</td></tr>
+                  <tr><td>501–600</td><td class="text-right">Rs 41.62</td></tr>
+                  <tr><td>601–700</td><td class="text-right">Rs 42.76</td></tr>
+                  <tr><td>700+ (Flat Rate)</td><td class="text-right">Rs 47.69</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Commercial Table -->
+            <div class="ref-block">
+              <h3>Commercial Tariffs (A-2)</h3>
+              <table class="ref-schedule-table">
+                <thead><tr><th>Sanctioned Load</th><th class="text-right">Rate (Rs)</th></tr></thead>
+                <tbody>
+                  <tr><td>Less than 5 kW</td><td class="text-right">Rs 38.82 / kWh</td></tr>
+                  <tr><td>5 kW and Above</td><td class="text-right">Rs 40.26 / kWh</td></tr>
+                </tbody>
+              </table>
+              <div class="ref-note-box">
+                <strong>Fixed Monthly Charges:</strong><br>
+                • Less than 5 kW (Single Phase): Rs 400<br>
+                • Above 5 kW / Three Phase: Rs 800
+              </div>
+            </div>
+
+            <!-- Agricultural Table -->
+            <div class="ref-block">
+              <h3>Agricultural Tariffs (D)</h3>
+              <table class="ref-schedule-table">
+                <thead><tr><th>Load &amp; Time</th><th class="text-right">Rate (Rs)</th></tr></thead>
+                <tbody>
+                  <tr><td>&lt; 5 kW Peak</td><td class="text-right">Rs 37.25 / kWh</td></tr>
+                  <tr><td>&lt; 5 kW Off-Peak</td><td class="text-right">Rs 30.10 / kWh</td></tr>
+                  <tr><td>≥ 5 kW Peak</td><td class="text-right">Rs 46.80 / kWh</td></tr>
+                  <tr><td>≥ 5 kW Off-Peak</td><td class="text-right">Rs 38.54 / kWh</td></tr>
+                </tbody>
+              </table>
+              <div class="ref-note-box">
+                <strong>Fixed Monthly Charge:</strong> Rs 200/month<br>
+                <strong>GST Rate:</strong> 5% (Subsidized for Agricultural tube wells)
+              </div>
+            </div>
+          </div>
+          <div class="statutory-footer">
+            <strong>Statutory Surcharges &amp; Taxes:</strong> General Sales Tax (GST) 17% (Agri 5%) · Electricity Duty (ED) 1.5% · Neelum-Jhelum (NJ) Surcharge Rs 0.10/unit · Financing Cost (FC) Surcharge 23.3% · TV Licence Fee Rs 35 (Domestic only) · Late Payment Surcharge +10% after due date.
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Studio Toast -->
+    <div class="studio-toast hidden" id="studio-toast" role="alert" aria-live="assertive"></div>
+  </div>
+
+  <!-- Shared Engine & Controller -->
+  <script src="lesco-calc-core.js"></script>
+  <script src="fulltab.js"></script>
+</body>
+</html>

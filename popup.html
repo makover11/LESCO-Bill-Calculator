@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LESCO Bill Calculator</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="calc-container" id="calc-root">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">⚡</div>
+        <div class="brand-text">
+          <h1>LESCO Bill Calculator</h1>
+          <p>Official NEPRA Subsidized &amp; Slab Tariffs</p>
+        </div>
+      </div>
+      <button type="button" class="studio-btn" id="btn-open-studio" title="Open Full-Screen Studio Mode">
+        <span>Studio</span>
+        <span class="icon" aria-hidden="true">↗</span>
+      </button>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tariff-tabs" role="tablist" aria-label="Tariff Categories">
+      <button type="button" role="tab" class="tab-btn active" id="tab-btn-domestic" data-tariff="domestic" aria-selected="true" aria-controls="panel-inputs">
+        <span class="tab-icon" aria-hidden="true">🏠</span>
+        <span class="tab-title">Domestic</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-btn-commercial" data-tariff="commercial" aria-selected="false" aria-controls="panel-inputs">
+        <span class="tab-icon" aria-hidden="true">🏢</span>
+        <span class="tab-title">Commercial</span>
+      </button>
+      <button type="button" role="tab" class="tab-btn" id="tab-btn-agricultural" data-tariff="agricultural" aria-selected="false" aria-controls="panel-inputs">
+        <span class="tab-icon" aria-hidden="true">🌾</span>
+        <span class="tab-title">Agricultural</span>
+      </button>
+    </nav>
+
+    <!-- Quick Presets -->
+    <div class="presets-bar" id="presets-container">
+      <span class="presets-label">Presets:</span>
+      <button type="button" class="preset-pill" data-units="50">50u (Lifeline)</button>
+      <button type="button" class="preset-pill" data-units="100">100u</button>
+      <button type="button" class="preset-pill" data-units="200">200u (Protected)</button>
+      <button type="button" class="preset-pill" data-units="350">350u</button>
+      <button type="button" class="preset-pill" data-units="500">500u</button>
+    </div>
+
+    <!-- Inputs Body -->
+    <main class="inputs-body" id="panel-inputs">
+      <!-- Row 1: Units / Peak & Off-Peak -->
+      <div class="form-row">
+        <!-- Units Consumed (Domestic & Commercial) -->
+        <div class="form-field field-non-agri" id="field-units-container">
+          <label for="input-units">Units Consumed (kWh)</label>
+          <div class="input-badge-wrap">
+            <input type="number" id="input-units" placeholder="e.g. 150" min="0" max="99999" step="1">
+            <span class="badge-inside">kWh</span>
+          </div>
+        </div>
+
+        <!-- Agricultural Peak Units -->
+        <div class="form-field field-agri-only hidden" id="field-agri-peak-container">
+          <label for="input-agri-peak">Peak Units (kWh)</label>
+          <div class="input-badge-wrap">
+            <input type="number" id="input-agri-peak" placeholder="e.g. 120" min="0" max="99999" step="1">
+            <span class="badge-inside peak">Peak</span>
+          </div>
+        </div>
+
+        <!-- Agricultural Off-Peak Units -->
+        <div class="form-field field-agri-only hidden" id="field-agri-offpeak-container">
+          <label for="input-agri-offpeak">Off-Peak Units (kWh)</label>
+          <div class="input-badge-wrap">
+            <input type="number" id="input-agri-offpeak" placeholder="e.g. 280" min="0" max="99999" step="1">
+            <span class="badge-inside offpeak">Off-Peak</span>
+          </div>
+        </div>
+
+        <!-- Connection Phase (Always visible) -->
+        <div class="form-field">
+          <label for="select-phase">Connection Phase</label>
+          <select id="select-phase">
+            <option value="single">Single Phase</option>
+            <option value="three">Three Phase</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 2: Category / Load -->
+      <div class="form-row">
+        <!-- Domestic Category -->
+        <div class="form-field field-dom-only" id="field-dom-cat-container">
+          <label for="select-dom-cat">Domestic Category</label>
+          <select id="select-dom-cat">
+            <option value="protected">Protected / Lifeline</option>
+            <option value="unprotected">Unprotected Consumer</option>
+          </select>
+        </div>
+
+        <!-- Commercial Load -->
+        <div class="form-field field-com-only hidden" id="field-com-load-container">
+          <label for="select-com-load">Sanctioned Load</label>
+          <select id="select-com-load">
+            <option value="under5">Less than 5 kW</option>
+            <option value="above5">5 kW or Above</option>
+          </select>
+        </div>
+
+        <!-- Agricultural Load -->
+        <div class="form-field field-agri-only hidden" id="field-agri-load-container">
+          <label for="select-agri-load">Sanctioned Load</label>
+          <select id="select-agri-load">
+            <option value="under5">Less than 5 kW</option>
+            <option value="above5">More than 5 kW</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Eligibility Notice / Guidance Banner -->
+      <div class="note-banner hidden" id="note-banner" role="status" aria-live="polite">
+        <span class="note-icon" id="note-icon" aria-hidden="true">💡</span>
+        <span class="note-text" id="note-text"></span>
+      </div>
+
+      <!-- FPA (Fuel Price Adjustment) Panel -->
+      <div class="fpa-panel">
+        <div class="fpa-left">
+          <label for="input-fpa">Fuel Price Adj. (FPA)</label>
+          <span class="fpa-subtext">Rs/unit (NEPRA monthly rate, can be negative)</span>
+        </div>
+        <div class="fpa-right">
+          <input type="number" id="input-fpa" value="0.00" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+
+      <!-- Calculate Button -->
+      <button type="button" class="calc-btn" id="btn-calculate">
+        <span class="btn-icon" aria-hidden="true">⚡</span>
+        <span>Calculate LESCO Bill</span>
+      </button>
+    </main>
+
+    <!-- Results Section -->
+    <section class="results-section hidden" id="section-results" aria-label="Calculation Results">
+      <!-- Total Summary Card -->
+      <div class="total-card">
+        <div class="total-main">
+          <span class="total-label">Estimated Total Bill</span>
+          <div class="total-value">
+            <span class="currency">Rs</span>
+            <span class="amount" id="res-total-amount">0</span>
+          </div>
+        </div>
+        <div class="total-meta">
+          <div class="meta-pill">Units: <strong id="res-meta-units">–</strong> kWh</div>
+          <div class="meta-pill">Tariff: <strong id="res-meta-category">–</strong></div>
+          <div class="meta-pill">Avg: <strong id="res-meta-avg">–</strong> Rs/kWh</div>
+        </div>
+      </div>
+
+      <!-- Action Toolbar -->
+      <div class="actions-toolbar">
+        <button type="button" class="action-btn" id="btn-copy-summary" title="Copy formatted bill summary">
+          <span aria-hidden="true">📋</span> Copy Summary
+        </button>
+        <button type="button" class="action-btn" id="btn-print-bill" title="Print this bill calculation">
+          <span aria-hidden="true">🖨️</span> Print
+        </button>
+        <button type="button" class="action-btn secondary" id="btn-reset" title="Reset all inputs">
+          <span aria-hidden="true">🔄</span> Reset
+        </button>
+      </div>
+
+      <!-- Due Dates Display -->
+      <div class="due-dates-grid">
+        <div class="due-card ok">
+          <div class="due-header">
+            <span class="due-icon" aria-hidden="true">⏰</span>
+            <span class="due-title">Within Due Date</span>
+          </div>
+          <div class="due-date" id="res-due-date">–</div>
+          <div class="due-amount" id="res-due-amount">Rs 0</div>
+        </div>
+        <div class="due-card late">
+          <div class="due-header">
+            <span class="due-icon" aria-hidden="true">⚠️</span>
+            <span class="due-title">After Due Date (+10%)</span>
+          </div>
+          <div class="due-date" id="res-late-date">–</div>
+          <div class="due-amount" id="res-late-amount">Rs 0</div>
+        </div>
+      </div>
+
+      <!-- Slab-wise Breakdown -->
+      <div class="breakdown-card" id="slab-container">
+        <div class="card-header">
+          <h2>🔢 Slab-wise Energy Charges</h2>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Slab Range</th>
+                <th class="text-right">Units</th>
+                <th class="text-right">Rate (Rs)</th>
+                <th class="text-right">Amount (Rs)</th>
+              </tr>
+            </thead>
+            <tbody id="slab-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Itemized Taxes & Surcharges -->
+      <div class="breakdown-card">
+        <div class="card-header">
+          <h2>📋 Itemized Bill Ledger</h2>
+        </div>
+        <div class="breakdown-rows" id="breakdown-rows-container"></div>
+      </div>
+    </section>
+
+    <!-- Quick Reference Accordion -->
+    <details class="ref-accordion" id="ref-accordion">
+      <summary class="ref-summary">
+        <span class="ref-summary-title">📊 Official LESCO Tariff Slabs</span>
+        <span class="ref-summary-arrow" aria-hidden="true">▼</span>
+      </summary>
+      <div class="ref-content">
+        <div class="ref-grid">
+          <div class="ref-col">
+            <h3>Domestic Slabs</h3>
+            <table class="ref-table">
+              <thead><tr><th>Slab</th><th class="text-right">Rate</th></tr></thead>
+              <tbody>
+                <tr><td>1–50 (Lifeline)</td><td class="text-right">Rs 3.95</td></tr>
+                <tr><td>51–100 (Lifeline)</td><td class="text-right">Rs 7.74</td></tr>
+                <tr><td>1–100 (Protected)</td><td class="text-right">Rs 10.54</td></tr>
+                <tr><td>101–200 (Protected)</td><td class="text-right">Rs 13.01</td></tr>
+                <tr><td>1–100 (Unprot)</td><td class="text-right">Rs 22.44</td></tr>
+                <tr><td>101–200 (Unprot)</td><td class="text-right">Rs 28.91</td></tr>
+                <tr><td>201–300</td><td class="text-right">Rs 33.10</td></tr>
+                <tr><td>301–400</td><td class="text-right">Rs 37.99</td></tr>
+                <tr><td>401–500</td><td class="text-right">Rs 40.20</td></tr>
+                <tr><td>501–600</td><td class="text-right">Rs 41.62</td></tr>
+                <tr><td>601–700</td><td class="text-right">Rs 42.76</td></tr>
+                <tr><td>700+ (Flat Rate)</td><td class="text-right">Rs 47.69</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="ref-col">
+            <h3>Commercial &amp; Agri</h3>
+            <table class="ref-table">
+              <thead><tr><th>Category</th><th class="text-right">Rate</th></tr></thead>
+              <tbody>
+                <tr><td>Comm &lt; 5 kW</td><td class="text-right">Rs 38.82</td></tr>
+                <tr><td>Comm ≥ 5 kW</td><td class="text-right">Rs 40.26</td></tr>
+                <tr><td>Agri &lt; 5kW Peak</td><td class="text-right">Rs 37.25</td></tr>
+                <tr><td>Agri &lt; 5kW Off-Pk</td><td class="text-right">Rs 30.10</td></tr>
+                <tr><td>Agri ≥ 5kW Peak</td><td class="text-right">Rs 46.80</td></tr>
+                <tr><td>Agri ≥ 5kW Off-Pk</td><td class="text-right">Rs 38.54</td></tr>
+              </tbody>
+            </table>
+            <div class="ref-tax-note">
+              <strong>Taxes included:</strong> GST 17% (Agri 5%), ED 1.5%, NJ Surcharge Rs 0.10/kWh, FC Surcharge 23.3%, TV Licence Rs 35, Late payment +10%.
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Toast Notification -->
+    <div class="toast hidden" id="toast-message" role="alert" aria-live="assertive"></div>
+  </div>
+
+  <!-- Shared Core Engine and Popup Controller -->
+  <script src="lesco-calc-core.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

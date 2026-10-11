@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "LESCO Bill Calculator",
+  "short_name": "LESCO Calc",
+  "version": "1.0.0",
+  "description": "Calculate Lahore Electric Supply Company (LESCO) electricity bills with official NEPRA slabs, taxes, FPA, and peak tariffs.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "LESCO Bill Calculator",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "contextMenus"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Open LESCO Bill Calculator"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "lesco-bill-calculator@softrank.tools",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}
